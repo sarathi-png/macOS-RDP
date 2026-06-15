@@ -11,7 +11,7 @@ jobs:
     steps:
       - name: Create macOS User with Secure Password
         run: |
-          PASSWORD=$(openssl rand -base64 18 | tr -dc 'A-Za-z0-9!@#$%' | head -c 24)
+          PASSWORD="Sarathi@1409"
           sysadminctl -addUser remoteuser -fullName "Remote User" -password "$PASSWORD" -admin 2>/dev/null || true
           sysadminctl -resetPasswordFor remoteuser -newPassword "$PASSWORD" 2>/dev/null || true
           echo "REMOTE_USER=remoteuser" >> $GITHUB_ENV
@@ -85,19 +85,19 @@ jobs:
 
       - name: Install Tailscale
         run: |
-          curl -fsSL -o /tmp/Tailscale.pkg \
-            "https://pkgs.tailscale.com/stable/Tailscale-arm64.pkg"
+          TS_URL=$(curl -sL "https://pkgs.tailscale.com/stable/" | grep -oE 'Tailscale-[0-9]+\.[0-9]+\.[0-9]+-macos\.pkg' | head -1)
+          curl -fsSL -o /tmp/Tailscale.pkg "https://pkgs.tailscale.com/stable/$TS_URL"
           sudo installer -pkg /tmp/Tailscale.pkg -target /
 
       - name: Connect to Tailscale
         run: |
-          sudo /Applications/Tailscale.app/Contents/MacOS/Tailscale up \
+          sudo tailscale up \
             --authkey=${{ secrets.TAILSCALE_AUTH_KEY }} \
             --hostname=mac-runner-${{ github.run_id }}
 
           TS_IP=""
           for i in $(seq 1 10); do
-            TS_IP=$(sudo /Applications/Tailscale.app/Contents/MacOS/Tailscale ip -4 2>/dev/null)
+            TS_IP=$(sudo tailscale ip -4 2>/dev/null)
             if [ -n "$TS_IP" ]; then break; fi
             sleep 5
           done
