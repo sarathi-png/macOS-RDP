@@ -1,6 +1,7 @@
 name: macOS RDP (VNC + RDP + Tailscale)
 
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
 
 jobs:
   macos-rdp:
